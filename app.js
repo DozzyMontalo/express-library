@@ -13,8 +13,7 @@ const helmet = require("helmet");
 
 const app = express();
 const mongoose = require("mongoose");
-// const dev_db_url =
-//   "mongodb+srv://local-lib:Breezy491@cluster0.0b2rc.mongodb.net/?retryWrites=true&w=majority";
+
 const mongoDB = process.env.MONGODB_URI;
 mongoose.set("strictQuery", false); // to handle deprecation error
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
