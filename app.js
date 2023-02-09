@@ -15,7 +15,9 @@ const app = express();
 const mongoose = require("mongoose");
 
 // Set up mongoose connection
-const mongoDB = process.env.MONGODB_URI;
+const dev_db_url =
+  "mongodb+srv://local-lib:Breezy491@cluster0.0b2rc.mongodb.net/?retryWrites=true&w=majority";
+const mongoDB = process.env.MONGODB_URI || dev_db_url;
 mongoose.set("strictQuery", false); // to handle deprecation error
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
 
