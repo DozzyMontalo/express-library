@@ -57,7 +57,7 @@ exports.author_create_get = (req, res, next) => {
 };
 
 // Handle Author create on POST.
-exports.author_create_post = (req, res, next) => [
+exports.author_create_post = [
   //validate and sanitize fields.
   body("first_name")
     .trim()
@@ -81,6 +81,7 @@ exports.author_create_post = (req, res, next) => [
     .optional({ checkFalsy: true })
     .isISO8601()
     .toDate(),
+
   //process request after validation and sanitization.
   (req, res, next) => {
     //Extract the validation errors from a request.
@@ -182,75 +183,74 @@ exports.author_delete_post = (req, res, next) => {
 
 // Display Author update form on GET.
 exports.author_update_get = (req, res, next) => {
-     Author.findById(req.params.id).exec((err, author) => {
-      if(err){
-        return next(err)
-      }
-      if(author == null){
-        const err = new Error("author not found");
-        err.status = 404;
-      }
-      //Success 
-      res.render("author_form",{
-        title: "Update Author",
-        author
-      })
-      
-     })
+  Author.findById(req.params.id).exec((err, author) => {
+    if (err) {
+      return next(err);
+    }
+    if (author == null) {
+      const err = new Error("author not found");
+      err.status = 404;
+    }
+    //Success
+    res.render("author_form", {
+      title: "Update Author",
+      author,
+    });
+  });
 };
 
 // Handle Author update on POST.
 exports.author_update_post = [
-  //Validate and sanitze fields 
+  //Validate and sanitze fields
   body("first_name", "First name must not be empty")
     .trim()
-    .isLength({min: 1})
+    .isLength({ min: 1 })
     .escape(),
   body("last_name", "Last name must not be empty")
     .trim()
-    .isLength({min: 1})
+    .isLength({ min: 1 })
     .escape(),
   body("date_of_birth", "invalid date")
-    .optional({checkFalsy: true})
+    .optional({ checkFalsy: true })
     .isISO8601()
-    .toDate(),  
+    .toDate(),
   body("date_of_death", "invalid date")
-    .optional({checkFalsy: true})
+    .optional({ checkFalsy: true })
     .isISO8601()
-    .toDate(),   
-    
+    .toDate(),
+
   //Process request after validation and Sanitization
-   (req, res, next) =>{
+  (req, res, next) => {
     //Extract errors from a request
-      const errors = validationResult(req)
+    const errors = validationResult(req);
 
-      //Create new author with escaped and trimmed data and old id.
-      const author = new Author({
-         first_name: req.body.first_name,
-         family_name: req.body.family_name,
-         date_of_birth: req.body.date_of_birth,
-         date_of_death: req.body.date_of_death,
-         _id: req.params.id,  //This is required or a new id will be assigned.
+    //Create new author with escaped and trimmed data and old id.
+    const author = new Author({
+      first_name: req.body.first_name,
+      family_name: req.body.family_name,
+      date_of_birth: req.body.date_of_birth,
+      date_of_death: req.body.date_of_death,
+      _id: req.params.id, //This is required or a new id will be assigned.
+    });
+
+    if (!errors.isEmpty()) {
+      //There are errors. rerender form with sanitized values and error messages
+      res.render("author_form", {
+        title: "Update Author",
+        author,
+        errors: errors.array(),
       });
+      return;
+    } else {
+      //The data entered on the form are OK. Update the record.
+      Author.findByIdAndUpdate(req.params.id, author, {}, (err, the_author) => {
+        if (err) {
+          return next(err);
+        }
 
-      if(!errors.isEmpty()){
-        //There are errors. rerender form with sanitized values and error messages 
-        res.render("author_form", {
-           title: "Update Author",
-           author,
-           errors: errors.array(),
-        })
-        return;
-      }else {
-        //The data entered on the form are OK. Update the record.
-        Author.findByIdAndUpdate(req.params.id, author, {}, (err, the_author ) =>{
-          if(err){
-            return next(err);
-          }
-
-          //Successful: redirect to author detail page.  
-          res.redirect(the_author.url);
-        })
-      }
-   }
-]
+        //Successful: redirect to author detail page.
+        res.redirect(the_author.url);
+      });
+    }
+  },
+];

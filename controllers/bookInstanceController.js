@@ -30,7 +30,7 @@ exports.bookinstance_detail = (req, res, next) => {
       if (bookinstance == null) {
         // No results.
         const err = new Error("Book copy not found");
-        err.st2atus = 404;
+        err.status = 404;
         return next(err);
       }
       // Successful, so render.

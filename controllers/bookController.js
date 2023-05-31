@@ -86,7 +86,6 @@ exports.book_detail = (req, res, next) => {
 // Display book create form on GET.
 exports.book_create_get = (req, res, next) => {
   //Get all authors and genres, which we can use for adding to our book.
-
   async.parallel(
     {
       authors(callback) {
@@ -111,7 +110,7 @@ exports.book_create_get = (req, res, next) => {
 
 // Handle book create on POST.
 exports.book_create_post = [
-  //Convert the genre to an array.
+  // Convert the genre to an array.
   (req, res, next) => {
     if (!Array.isArray(req.body.genre)) {
       req.body.genre =
@@ -119,8 +118,13 @@ exports.book_create_post = [
     }
     next();
   },
-  //Validate and sanitize fields.
+
+  // Validate and sanitize fields.
   body("title", "Title must not be empty.")
+    .trim()
+    .isLength({ min: 1 })
+    .escape(),
+  body("author", "Author must not be empty.")
     .trim()
     .isLength({ min: 1 })
     .escape(),
@@ -131,24 +135,24 @@ exports.book_create_post = [
   body("isbn", "ISBN must not be empty").trim().isLength({ min: 1 }).escape(),
   body("genre.*").escape(),
 
-  //process request after validation and sanitization.
+  // Process request after validation and sanitization.
   (req, res, next) => {
-    //Extract the validation errors and sanitization.
+    // Extract the validation errors from a request.
     const errors = validationResult(req);
 
-    //Create a Book object with escaped and trimmed data.
+    // Create a Book object with escaped and trimmed data.
     const book = new Book({
       title: req.body.title,
       author: req.body.author,
       summary: req.body.summary,
       isbn: req.body.isbn,
-      gentre: req.body.genre,
+      genre: req.body.genre,
     });
 
     if (!errors.isEmpty()) {
-      //There are errors. Render form again with sanitized values/errors messages.
+      // There are errors. Render form again with sanitized values/error messages.
 
-      //Get all authors and genres for form.
+      // Get all authors and genres for form.
       async.parallel(
         {
           authors(callback) {
@@ -163,10 +167,9 @@ exports.book_create_post = [
             return next(err);
           }
 
-          //Mark our selected genres as checked.
+          // Mark our selected genres as checked.
           for (const genre of results.genres) {
             if (book.genre.includes(genre._id)) {
-              // Current genre is selected. Set "checked" flag.
               genre.checked = "true";
             }
           }
@@ -175,14 +178,14 @@ exports.book_create_post = [
             authors: results.authors,
             genres: results.genres,
             book,
-            errors: errors.array,
+            errors: errors.array(),
           });
         }
       );
       return;
     }
 
-    //Data from form is valid. Save book.
+    // Data from form is valid. Save book.
     book.save((err) => {
       if (err) {
         return next(err);
